@@ -1,41 +1,113 @@
-const express = require('express');
-const cors = require('cors');
+const express = require("express");
+const cors = require("cors");
 
-// const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// const users = [];
+const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  // Checks if user account exists based on username
+  const { username } = request.headers;
+
+  const userToBeFound = users.find((user) => username === user.username);
+
+  if (!userToBeFound) {
+    return response
+      .status(400)
+      .json({ error: "User not found.", userToBeFound });
+  }
+
+  request.user = userToBeFound;
+
+  return next();
 }
 
-app.post('/users', (request, response) => {
-  // Complete aqui
+app.post("/users", (request, response) => {
+  // Create new user
+  const { name, username } = request.body;
+
+  const newUser = {
+    id: String(uuidv4()),
+    name,
+    username,
+    todos: [],
+  };
+
+  users.push(newUser);
+
+  return response.status(201).send(newUser);
 });
 
-app.get('/todos', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+app.get("/todos", checksExistsUserAccount, (request, response) => {
+  // Gets user todolist
+  const { user } = request;
+
+  return response.json(user.todos);
 });
 
-app.post('/todos', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+app.post("/todos", checksExistsUserAccount, (request, response) => {
+  // Creates new todo to user list
+  const { title, deadline } = request.body;
+  const { user } = request;
+
+  const newTodo = {
+    id: String(uuidv4()),
+    title,
+    done: false,
+    deadline: new Date(deadline),
+    created_at: new Date(),
+  };
+
+  user.todos.push(newTodo);
+
+  return response.status(201).send(newTodo);
 });
 
-app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+app.put("/todos/:id", checksExistsUserAccount, (request, response) => {
+  // Changes title and deadline of one user todo
+  const { user } = request;
+  const { title, deadline } = request.body;
+  const { id } = request.params;
+
+  user.todos.map((todo) => {
+    if (todo.id === id) {
+      todo.title = title;
+      todo.deadline = deadline;
+    }
+  });
+
+  return response.status(201).send();
 });
 
-app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+app.patch("/todos/:id/done", checksExistsUserAccount, (request, response) => {
+  // Changes one user todo to done
+  const { user } = request;
+  const { id } = request.params;
+
+  console.log(id);
+
+  user.todos.map((todo) => {
+    if (todo.id === id) {
+      todo.done = true;
+    }
+  });
+
+  return response.status(201).send();
 });
 
-app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+app.delete("/todos/:id", checksExistsUserAccount, (request, response) => {
+  // Deletes the todo that matches the id of route params
+  const { user } = request;
+  const { id } = request.params;
+
+  user.todos.splice(id, 1);
+
+  return response.status(200).json(user.todos);
 });
 
 module.exports = app;
