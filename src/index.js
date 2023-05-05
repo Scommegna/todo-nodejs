@@ -79,7 +79,7 @@ app.put("/todos/:id", checksExistsUserAccount, (request, response) => {
   const { id } = request.params;
 
   const todo = user.todos.find((todo) => {
-    todo.id === id;
+    return todo.id === id;
   });
 
   if (!todo) {
@@ -98,7 +98,7 @@ app.patch("/todos/:id/done", checksExistsUserAccount, (request, response) => {
   const { id } = request.params;
 
   const todo = user.todos.find((todo) => {
-    todo.id === id;
+    return todo.id === id;
   });
 
   if (!todo) {
@@ -121,7 +121,7 @@ app.delete("/todos/:id", checksExistsUserAccount, (request, response) => {
     return response.status(404).json({ error: "Todo not found" });
   }
 
-  user.todo.splice(todo, 1);
+  user.todos.splice(todo, 1);
 
   return response.status(204).send();
 });
